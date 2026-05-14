@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChainIT - Demo</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-green: #4CAF50;
+            --dark: #1a1d1a;
+            --background: #f8faf8;
+            --border: #e2ebe2;
+            --muted-text: #6b7c6b;
+            --font-body: 'DM Sans', sans-serif;
+            --font-mono: 'Space Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--background);
+            color: var(--dark);
+            overflow-x: hidden;
+        }
+
+        /* Screen Management */
+        .screen {
+            display: none;
+            min-height: calc(100vh - 64px);
+            opacity: 0;
+            transition: opacity 400ms ease, transform 400ms ease;
+        }
+
+        .screen.active {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .screen.fade-out {
+            opacity: 0;
+            transform: translateY(-8px);
+        }
+
+        /* Shared */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .btn-green { background-color: var(--primary-green); color: white; border: none; }
+        .btn-green:hover { opacity: 0.9; }
+        .btn-dark { background-color: var(--dark); color: white; border: none; }
+        .btn-outline { background-color: transparent; color: var(--dark); border: 1px solid var(--border); }
+        .pill-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--muted-text);
+            margin-bottom: 24px;
+        }
+        .pill-badge span { color: var(--primary-green); }
+
+        /* Navbar */
+        .navbar {
+            height: 64px;
+            background-color: white;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 48px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            transition: opacity 400ms;
+        }
+        .logo { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 20px; }
+        .logo-icon {
+            width: 28px; height: 28px; background-color: var(--dark); border-radius: 6px;
+            display: flex; align-items: center; justify-content: center; color: white;
+        }
+        .logo span.it { color: var(--primary-green); }
+        .nav-links { display: flex; gap: 32px; }
+        .nav-links a {
+            text-decoration: none; color: var(--muted-text); font-size: 14px; font-weight: 500;
+            padding-top: 22px; padding-bottom: 20px; border-bottom: 2px solid transparent; transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--dark); }
+        .nav-links a.active { color: var(--dark); border-bottom-color: var(--primary-green); }
+        .nav-actions { display: flex; align-items: center; gap: 16px; }
+        .icon-btn { background: none; border: none; cursor: pointer; color: var(--muted-text); display: flex;}
+
+        /* Screen 1 */
+        #screen1 { flex-direction: row; padding: 0 48px; align-items: center; }
+        .hero-left { flex: 1; padding-right: 48px; }
+        .hero-left h1 { font-size: 56px; line-height: 1.1; margin-bottom: 24px; letter-spacing: -0.5px; }
+        .hero-left h1 .green { color: var(--primary-green); }
+        .hero-left h1 .muted { color: var(--muted-text); }
+        .hero-left p { font-size: 16px; line-height: 1.6; color: var(--muted-text); margin-bottom: 40px; max-width: 500px; }
+        .hero-actions { display: flex; gap: 16px; }
+        .hero-right { flex: 1; }
+        .mac-window {
+            background: white; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+            border: 1px solid var(--border); overflow: hidden;
+        }
+        .mac-header { height: 40px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 16px; position: relative; }
+        .mac-dots { display: flex; gap: 8px; }
+        .mac-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .mac-dot.red { background-color: #ff5f56; }
+        .mac-dot.yellow { background-color: #ffbd2e; }
+        .mac-dot.green { background-color: #27c93f; }
+        .mac-title { position: absolute; left: 50%; transform: translateX(-50%); font-family: var(--font-mono); font-size: 12px; color: var(--muted-text); }
+        .mac-tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 16px; }
+        .mac-tab { padding: 12px 16px; font-size: 12px; color: var(--muted-text); cursor: pointer; border-bottom: 2px solid transparent; font-weight: 500; transition: color 0.2s;}
+        .mac-tab:hover { color: var(--dark); }
+        .mac-tab.active { color: var(--primary-green); border-bottom-color: var(--primary-green); }
+        .mac-body { padding: 24px; background-color: #fafafa; }
+        .mac-code { font-family: var(--font-mono); font-size: 12px; line-height: 1.6; color: #333; white-space: pre; }
+        .code-keyword { color: #d73a49; }
+        .code-string { color: #032f62; }
+        .mac-footer { padding: 12px 24px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted-text); display: flex; align-items: center; gap: 8px; background: white;}
+        .status-dot { width: 8px; height: 8px; background-color: var(--primary-green); border-radius: 50%; animation: pulse 2s infinite; }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(76, 175, 80, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+        }
+
+        /* Screen 2 */
+        #screen2 { justify-content: center; align-items: center; gap: 80px; flex-direction: row; padding: 40px; }
+        .qr-panel { display: flex; flex-direction: column; align-items: center; text-align: center; transition: all 500ms ease; }
+        .qr-panel h2 { color: var(--primary-green); font-size: 24px; margin-bottom: 8px; }
+        .qr-panel p { color: var(--dark); margin-bottom: 32px; font-size: 14px; max-width: 300px; }
+        .qr-card { background: white; border: 2px dashed var(--border); border-radius: 16px; padding: 32px; display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; }
+        .qr-svg { width: 200px; height: 200px; margin-bottom: 24px; position: relative; }
+        .qr-status { display: flex; align-items: center; gap: 12px; color: var(--muted-text); font-size: 14px; }
+        .spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--primary-green); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .timer-pill { background-color: var(--dark); color: white; padding: 8px 16px; border-radius: 20px; font-family: var(--font-mono); font-size: 12px; }
+        
+        .phone-container { transition: transform 1200ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 1000ms ease; transform: translateX(100vw); opacity: 0; position: relative; z-index: 10;}
+        .phone-container.slide-in { transform: translateX(0); opacity: 1; }
+        
+        .phone {
+            width: 240px; height: 500px; background: #fff; border: 3px solid var(--dark); border-radius: 40px;
+            box-shadow: 0 24px 48px rgba(0,0,0,0.15); position: relative; overflow: hidden; display: flex; flex-direction: column;
+        }
+        .phone-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 80px; height: 24px; background: var(--dark); border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; z-index: 10; }
+        .phone-status { display: flex; justify-content: space-between; padding: 10px 16px; font-size: 10px; font-weight: 500; }
+        .phone-content { flex: 1; padding: 16px; display: flex; flex-direction: column; }
+        .greeting { margin-top: 10px; margin-bottom: 16px; }
+        .greeting span { color: var(--dark); font-size: 12px; }
+        .greeting h3 { color: var(--primary-green); font-size: 16px; margin: 4px 0; }
+        .dmv-badge { display: inline-block; background: #f0f7f0; color: var(--primary-green); padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 500; }
+        .quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+        .action-btn { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 10px 4px; text-align: center; font-size: 9px; cursor: pointer; transition: all 0.2s; }
+        .action-btn.scan { border-color: var(--primary-green); color: var(--primary-green); font-weight: 500; }
+        .action-btn.scan.active { background: var(--primary-green); color: white; }
+        .action-btn .icon { margin: 0 auto 6px; display: flex; justify-content: center; }
+        .tasks h4 { font-size: 12px; margin-bottom: 10px; }
+        .task-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 10px; margin-bottom: 8px; }
+        .task-card h5 { font-size: 11px; margin-bottom: 4px; }
+        .task-card p { font-size: 9px; color: var(--muted-text); }
+        .task-meta { display: flex; justify-content: space-between; margin-top: 8px; font-size: 8px; color: var(--muted-text); }
+        
+        .phone-nav { height: 56px; border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; background: white; padding-bottom: 4px;}
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 8px; color: var(--muted-text); }
+        .nav-item.active { color: var(--primary-green); }
+        .nav-center { width: 40px; height: 40px; background: var(--primary-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; transform: translateY(-12px); box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);}
+
+        .camera-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 20; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        .viewfinder { width: 120px; height: 120px; border: 2px solid var(--primary-green); position: relative; margin-bottom: 20px; overflow: hidden; }
+        .viewfinder::before, .viewfinder::after { content: ''; position: absolute; width: 16px; height: 16px; border: 3px solid white; }
+        .viewfinder::before { top: -2px; left: -2px; border-right: none; border-bottom: none; }
+        .viewfinder::after { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+        .viewfinder-tr { position: absolute; top: -2px; right: -2px; width: 16px; height: 16px; border: 3px solid white; border-left: none; border-bottom: none; }
+        .viewfinder-bl { position: absolute; bottom: -2px; left: -2px; width: 16px; height: 16px; border: 3px solid white; border-right: none; border-top: none; }
+        .scan-line { position: absolute; width: 100%; height: 2px; background: var(--primary-green); top: 0; box-shadow: 0 0 8px var(--primary-green); animation: scan 1.5s linear infinite; }
+        .camera-overlay p { color: white; font-size: 11px; }
+        .flash-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary-green); opacity: 0; z-index: 30; pointer-events: none; transition: opacity 150ms ease; }
+
+        /* Screen 3 */
+        #screen3 { flex-direction: column; align-items: center; justify-content: center; background: white; min-height: 100vh; position: fixed; top:0; left:0; width: 100vw; z-index: 200; }
+        #screen3.active { display: flex; }
+        .loading-logo { margin-bottom: 40px; display: flex; align-items: center; gap: 12px; font-size: 24px; font-weight: bold; }
+        .progress-track { width: 200px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-bottom: 16px; }
+        .progress-fill { height: 100%; background: var(--primary-green); width: 0%; animation: none; }
+        @keyframes progress { from { width: 0%; } to { width: 100%; } }
+        .loading-text { font-family: var(--font-mono); font-size: 12px; color: var(--muted-text); }
+
+        /* Screen 4 */
+        #screen4 { flex-direction: row; background: var(--background); min-height: 100vh; position: fixed; top:0; left:0; width: 100vw; z-index: 300; }
+        #screen4.active { display: flex; }
+        .sidebar { width: 220px; background: var(--dark); color: white; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px; display: flex; align-items: center; gap: 12px; font-weight: bold; }
+        .sidebar-nav { flex: 1; padding: 20px 0; }
+        .side-item { padding: 12px 20px; display: flex; align-items: center; gap: 12px; color: #888; text-decoration: none; font-size: 13px; font-weight: 500; transition: all 0.2s; border-left: 3px solid transparent; }
+        .side-item:hover { color: white; }
+        .side-item.active { background: rgba(76, 175, 80, 0.1); color: var(--primary-green); border-left-color: var(--primary-green); }
+        .sidebar-footer { padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; }
+        .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--primary-green); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
+        .user-info h6 { font-size: 12px; letter-spacing: 0.5px; margin-bottom: 2px;}
+        .user-info p { font-size: 10px; color: #888; }
+        
+        .main-area { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .topbar { height: 64px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 40px; }
+        .topbar h2 { font-size: 16px; font-weight: 500; }
+        .topbar-pills { display: flex; gap: 12px; }
+        .pill { padding: 6px 12px; border: 1px solid var(--border); border-radius: 20px; font-size: 11px; display: flex; align-items: center; gap: 8px; background: white; font-weight: 500; }
+        .pill span.org { color: var(--primary-green); background: #f0f7f0; padding: 2px 6px; border-radius: 4px; font-size: 9px; }
+        
+        .content { padding: 40px; }
+        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+        .header-row h1 { font-size: 24px; margin-bottom: 4px; }
+        .header-row p { color: var(--muted-text); font-size: 14px; }
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
+        .stat-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 24px; opacity: 0; transform: translateY(20px); transition: all 400ms ease;}
+        .stat-card.animate-up { opacity: 1; transform: translateY(0); }
+        .stat-icon { width: 32px; height: 32px; background: #f0f7f0; color: var(--primary-green); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+        .stat-label { font-size: 10px; font-weight: bold; color: var(--muted-text); text-transform: uppercase; margin-bottom: 8px;}
+        .stat-value { font-size: 32px; font-weight: bold; margin-bottom: 8px; }
+        .stat-desc { font-size: 12px; color: var(--muted-text); line-height: 1.4; }
+        
+        .grid-row { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+        .card-panel { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+        .card-panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .card-panel h3 { font-size: 16px; }
+        .view-all { color: var(--primary-green); font-size: 12px; text-decoration: none; font-weight: 500; }
+        
+        .list-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--border); transition: background-color 0.2s;}
+        .list-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .list-row:hover { background-color: #fafafa; }
+        .list-name { font-weight: 500; font-size: 13px; margin-bottom: 4px; }
+        .list-meta { font-size: 11px; color: var(--muted-text); }
+        .arrow-icon { color: #ccc; transition: transform 0.2s; }
+        .list-row:hover .arrow-icon { transform: translateX(4px); color: var(--dark); }
+        
+        .actions-label { font-size: 12px; font-weight: bold; margin-bottom: 16px; text-transform: uppercase; color: var(--dark); }
+        .actions-col { display: flex; flex-direction: column; gap: 12px; }
+        .action-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all 0.2s; }
+        .action-card:hover { border-color: var(--primary-green); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .action-card:hover .arrow-icon { transform: translateX(4px); color: var(--primary-green); }
+        .action-text { flex: 1; }
+        .action-text h4 { font-size: 13px; margin-bottom: 2px; color: var(--dark); }
+        .action-text p { font-size: 11px; color: var(--muted-text); }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar" id="main-nav">
+        <div class="logo">
+            <div class="logo-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            </div>
+            <div>Chain<span class="it">IT</span></div>
+        </div>
+        <div class="nav-links">
+            <a href="#" class="active">Home</a>
+            <a href="#">Documentation</a>
+            <a href="#">Developer-Friendly Docs</a>
+            <a href="#">API Reference</a>
+        </div>
+        <div class="nav-actions">
+            <button class="icon-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+            <button class="btn btn-green" onclick="startSequence()">Developer Console &rarr;</button>
+        </div>
+    </nav>
+
+    <!-- SCREEN 1: Home -->
+    <div id="screen1" class="screen active">
+        <div class="hero-left">
+            <div class="pill-badge"><span>API Reference v1.0</span> — OAuth 2.0 + KYC + KYB + Pactvera</div>
+            <h1>Connect Your<br><span class="green">Products to the</span><br><span class="muted">Digital World</span></h1>
+            <p>APIs that power compliance, verification, and marketplace functionality. Build KYC/KYB onboarding, form based data collection, and blockchain-backed audit trails into any application.</p>
+            <div class="hero-actions">
+                <button class="btn btn-dark">Explore API Docs &rarr;</button>
+                <button class="btn btn-outline" onclick="startSequence()">Developer Console</button>
+            </div>
+        </div>
+        <div class="hero-right">
+            <div class="mac-window">
+                <div class="mac-header">
+                    <div class="mac-dots">
+                        <div class="mac-dot red"></div>
+                        <div class="mac-dot yellow"></div>
+                        <div class="mac-dot green"></div>
+                    </div>
+                    <div class="mac-title">chainit-api.js</div>
+                </div>
+                <div class="mac-tabs">
+                    <div class="mac-tab active">KYC Invite</div>
+                    <div class="mac-tab">KYB Verify</div>
+                    <div class="mac-tab">Pactvera Form</div>
+                </div>
+                <div class="mac-body">
+<div class="mac-code"><span class="code-keyword">const</span> axios = <span class="code-keyword">require</span>(<span class="code-string">'axios'</span>);
+
+<span class="code-keyword">let</span> data = JSON.stringify({
+  <span class="code-string">email</span>: <span class="code-string">"john.doe@example.com"</span>,
+  <span class="code-string">firstName</span>: <span class="code-string">"John"</span>,
+  <span class="code-string">lastName</span>: <span class="code-string">"Doe"</span>,
+  <span class="code-string">phone</span>: <span class="code-string">"+48123456789"</span>
+});
+
+<span class="code-keyword">let</span> config = {
+  <span class="code-string">method</span>: <span class="code-string">'post'</span>,
+  <span class="code-string">url</span>: <span class="code-string">'https://api.chainit.online/public-api/v1/kyc/invite'</span>,
+  <span class="code-string">headers</span>: { 
+    <span class="code-string">'Content-Type'</span>: <span class="code-string">'application/json'</span>,
+    <span class="code-string">'Authorization'</span>: <span class="code-string">'Bearer &lt;token&gt;'</span>
+  },
+  <span class="code-string">data</span>: data
+};
+
+axios.request(config)
+.then((response) => console.log(response.data))
+.catch((error) => console.log(error));</div>
+                </div>
+                <div class="mac-footer">
+                    <div class="status-dot"></div>
+                    API Status: All systems operational
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN 2: QR Login -->
+    <div id="screen2" class="screen">
+        <div class="qr-panel" id="qr-panel">
+            <h2>Scan the QR code to Login to ChainIT</h2>
+            <p>Open the ChainIT mobile app on your phone, scan the QR code, and confirm the login on your phone.</p>
+            <div class="qr-card">
+                <div class="qr-svg">
+                    <svg width="100%" height="100%" viewBox="0 0 100 100">
+                        <rect x="10" y="10" width="20" height="20" fill="var(--dark)"/>
+                        <rect x="12" y="12" width="16" height="16" fill="white"/>
+                        <rect x="14" y="14" width="12" height="12" fill="var(--dark)"/>
+                        
+                        <rect x="70" y="10" width="20" height="20" fill="var(--dark)"/>
+                        <rect x="72" y="12" width="16" height="16" fill="white"/>
+                        <rect x="74" y="14" width="12" height="12" fill="var(--dark)"/>
+                        
+                        <rect x="10" y="70" width="20" height="20" fill="var(--dark)"/>
+                        <rect x="12" y="72" width="16" height="16" fill="white"/>
+                        <rect x="14" y="74" width="12" height="12" fill="var(--dark)"/>
+                        
+                        <rect x="40" y="10" width="5" height="5" fill="var(--dark)"/>
+                        <rect x="50" y="15" width="10" height="5" fill="var(--dark)"/>
+                        <rect x="60" y="10" width="5" height="10" fill="var(--dark)"/>
+                        <rect x="10" y="40" width="15" height="5" fill="var(--dark)"/>
+                        <rect x="20" y="50" width="5" height="15" fill="var(--dark)"/>
+                        <rect x="40" y="40" width="20" height="20" fill="var(--dark)"/>
+                        <rect x="70" y="40" width="5" height="10" fill="var(--dark)"/>
+                        <rect x="80" y="50" width="10" height="10" fill="var(--dark)"/>
+                        <rect x="40" y="70" width="15" height="5" fill="var(--dark)"/>
+                        <rect x="50" y="80" width="5" height="10" fill="var(--dark)"/>
+                        <rect x="70" y="70" width="20" height="5" fill="var(--dark)"/>
+                        <rect x="80" y="80" width="5" height="10" fill="var(--dark)"/>
+                        
+                        <rect x="42" y="42" width="16" height="16" fill="white"/>
+                        <path d="M45 45h10v10H45z" fill="var(--primary-green)"/>
+                    </svg>
+                </div>
+                <div class="qr-status">
+                    <div class="spinner"></div>
+                    Waiting for authentication...
+                </div>
+            </div>
+            <div class="timer-pill">Expires in: 5:00</div>
+        </div>
+
+        <div class="phone-container" id="phone-container">
+            <div class="phone">
+                <div class="phone-notch"></div>
+                <div class="phone-status">
+                    <span>9:41</span>
+                    <span style="display:flex;gap:4px;">
+                        <svg width="12" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M14 14V2a1 1 0 0 0-1.5-.8l-11 11A1 1 0 0 0 2 14h12z"/></svg>
+                        <svg width="12" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M1 11l7-7 7 7-7 7-7-7z"/></svg>
+                    </span>
+                </div>
+                <div class="phone-content">
+                    <div class="greeting">
+                        <span>Hello,</span>
+                        <h3>Samantha John William</h3>
+                        <div class="dmv-badge">⬡ DMV Direct</div>
+                    </div>
+                    
+                    <div class="quick-actions">
+                        <div class="action-btn scan" id="scan-btn">
+                            <div class="icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h4v4H4zM16 4h4v4h-4zM4 16h4v4H4zM12 12h4v4h-4zM8 4h4v4H8zM20 16h-4v4h4zM4 12h4v4H4zM16 8h4v4h-4z"/></svg>
+                            </div>
+                            Scan QR Code
+                        </div>
+                        <div class="action-btn">
+                            <div class="icon">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                            </div>
+                            Share My Info
+                        </div>
+                        <div class="action-btn">
+                            <div class="icon">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                            </div>
+                            Mint VDT
+                        </div>
+                    </div>
+                    
+                    <div class="tasks">
+                        <h4>My Tasks (To Do)</h4>
+                        <div class="task-card">
+                            <h5>Bank Account Verification</h5>
+                            <p>CDE Construction</p>
+                            <div class="task-meta">
+                                <span>Requested by ABC Lending</span>
+                                <span>10 Jul 2025</span>
+                            </div>
+                        </div>
+                        <div class="task-card">
+                            <h5>Bank Account Verification</h5>
+                            <p>CDE Construction</p>
+                            <div class="task-meta">
+                                <span>Requested by ABC Lending</span>
+                                <span>10 Jul 2025</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="phone-nav">
+                    <div class="nav-item active">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                        <span style="margin-top:4px">Home</span>
+                    </div>
+                    <div class="nav-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>
+                        <span style="margin-top:4px">My Tasks</span>
+                    </div>
+                    <div class="nav-center">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h4v4H4zM16 4h4v4h-4zM4 16h4v4H4z"/></svg>
+                    </div>
+                    <div class="nav-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                        <span style="margin-top:4px">Collection</span>
+                    </div>
+                    <div class="nav-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span style="margin-top:4px">History</span>
+                    </div>
+                </div>
+
+                <!-- Camera Overlay -->
+                <div class="camera-overlay" id="camera-overlay">
+                    <div class="viewfinder">
+                        <div class="viewfinder-tr"></div>
+                        <div class="viewfinder-bl"></div>
+                        <div class="scan-line"></div>
+                        <div id="static-qr" style="opacity:0; transition: opacity 0.5s; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                            <svg width="80%" height="80%" viewBox="0 0 100 100">
+                                <rect x="10" y="10" width="20" height="20" fill="white"/>
+                                <rect x="12" y="12" width="16" height="16" fill="black"/>
+                                <rect x="14" y="14" width="12" height="12" fill="white"/>
+                                
+                                <rect x="70" y="10" width="20" height="20" fill="white"/>
+                                <rect x="72" y="12" width="16" height="16" fill="black"/>
+                                <rect x="74" y="14" width="12" height="12" fill="white"/>
+                                
+                                <rect x="10" y="70" width="20" height="20" fill="white"/>
+                                <rect x="12" y="72" width="16" height="16" fill="black"/>
+                                <rect x="14" y="74" width="12" height="12" fill="white"/>
+                                
+                                <rect x="40" y="10" width="5" height="5" fill="white"/>
+                                <rect x="50" y="15" width="10" height="5" fill="white"/>
+                                <rect x="60" y="10" width="5" height="10" fill="white"/>
+                                <rect x="10" y="40" width="15" height="5" fill="white"/>
+                                <rect x="20" y="50" width="5" height="15" fill="white"/>
+                                <rect x="40" y="40" width="20" height="20" fill="white"/>
+                                <rect x="70" y="40" width="5" height="10" fill="white"/>
+                                <rect x="80" y="50" width="10" height="10" fill="white"/>
+                                <rect x="40" y="70" width="15" height="5" fill="white"/>
+                                <rect x="50" y="80" width="5" height="10" fill="white"/>
+                                <rect x="70" y="70" width="20" height="5" fill="white"/>
+                                <rect x="80" y="80" width="5" height="10" fill="white"/>
+                                
+                                <rect x="42" y="42" width="16" height="16" fill="black"/>
+                                <path d="M45 45h10v10H45z" fill="var(--primary-green)"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p>Point camera at QR Code</p>
+                </div>
+                
+                <!-- Flash Overlay -->
+                <div class="flash-overlay" id="flash-overlay"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN 3: Loading -->
+    <div id="screen3" class="screen">
+        <div class="loading-logo">
+            <div class="logo-icon" style="width:40px;height:40px;border-radius:10px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            </div>
+            <div>Chain<span style="color:var(--primary-green)">IT</span></div>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="loading-text" id="loading-text">Authenticating via QR scan...</div>
+    </div>
+
+    <!-- SCREEN 4: Dashboard -->
+    <div id="screen4" class="screen">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                </div>
+                <div>Chain<span style="color:var(--primary-green)">IT</span></div>
+            </div>
+            <div class="sidebar-nav">
+                <a href="#" class="side-item active">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    Dashboard
+                </a>
+                <a href="#" class="side-item">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                    Applications
+                </a>
+                <a href="#" class="side-item">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    Monitor
+                </a>
+                <a href="#" class="side-item">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    Settings
+                </a>
+            </div>
+            <div class="sidebar-footer">
+                <div class="avatar">MB</div>
+                <div class="user-info">
+                    <h6>MARISA BERNHEISER</h6>
+                    <p>SUPER ADMIN</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-area">
+            <div class="topbar">
+                <h2>Dashboard</h2>
+                <div class="topbar-pills">
+                    <div class="pill">BG &middot; BIT Generic <span class="org">Organization</span></div>
+                    <div class="pill">MB &middot; MARISA BERNHEI...</div>
+                </div>
+            </div>
+            
+            <div class="content">
+                <div class="header-row">
+                    <div>
+                        <h1>Dashboard</h1>
+                        <p>Wed, 13 May 2026</p>
+                    </div>
+                    <button class="btn btn-green">＋ New application</button>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-card stat-anim">
+                        <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect></svg></div>
+                        <div class="stat-label">Applications</div>
+                        <div class="stat-value">48</div>
+                        <div class="stat-desc">Registered OAuth applications in your workspace.</div>
+                    </div>
+                    <div class="stat-card stat-anim">
+                        <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></div>
+                        <div class="stat-label">New This Month</div>
+                        <div class="stat-value">6</div>
+                        <div class="stat-desc">New OAuth apps in the current month.</div>
+                    </div>
+                    <div class="stat-card stat-anim">
+                        <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
+                        <div class="stat-label">Today's Logs</div>
+                        <div class="stat-value">3</div>
+                        <div class="stat-desc">Entries in developer monitor for today.</div>
+                    </div>
+                </div>
+
+                <div class="grid-row">
+                    <div class="card-panel">
+                        <div class="card-panel-header">
+                            <h3>Recent applications</h3>
+                            <a href="#" class="view-all">View all</a>
+                        </div>
+                        <div class="list-row">
+                            <div>
+                                <div class="list-name">345345</div>
+                                <div class="list-meta">Hosted Auth &middot; May 11, 2026</div>
+                            </div>
+                            <div class="arrow-icon">&rarr;</div>
+                        </div>
+                        <div class="list-row">
+                            <div>
+                                <div class="list-name">idp application test case1</div>
+                                <div class="list-meta">IDP &middot; May 11, 2026</div>
+                            </div>
+                            <div class="arrow-icon">&rarr;</div>
+                        </div>
+                        <div class="list-row">
+                            <div>
+                                <div class="list-name">test</div>
+                                <div class="list-meta">M2M &middot; May 11, 2026</div>
+                            </div>
+                            <div class="arrow-icon">&rarr;</div>
+                        </div>
+                        <div class="list-row">
+                            <div>
+                                <div class="list-name">test application</div>
+                                <div class="list-meta">Hosted Auth &middot; May 11, 2026</div>
+                            </div>
+                            <div class="arrow-icon">&rarr;</div>
+                        </div>
+                        <div class="list-row">
+                            <div>
+                                <div class="list-name">Acme Customer Portal</div>
+                                <div class="list-meta">Hosted Auth &middot; May 11, 2026</div>
+                            </div>
+                            <div class="arrow-icon">&rarr;</div>
+                        </div>
+                        <div class="list-row">
+                            <div>
+                                <div class="list-name">Test</div>
+                                <div class="list-meta">M2M &middot; May 5, 2026</div>
+                            </div>
+                            <div class="arrow-icon">&rarr;</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="actions-label">Actions</div>
+                        <div class="actions-col">
+                            <div class="action-card">
+                                <div class="stat-icon" style="margin:0; width:36px; height:36px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect></svg></div>
+                                <div class="action-text">
+                                    <h4>Applications</h4>
+                                    <p>OAuth apps, credentials &amp; branding</p>
+                                </div>
+                                <div class="arrow-icon">&rarr;</div>
+                            </div>
+                            <div class="action-card">
+                                <div class="stat-icon" style="margin:0; width:36px; height:36px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></div>
+                                <div class="action-text">
+                                    <h4>Monitor</h4>
+                                    <p>Auth &amp; system logs</p>
+                                </div>
+                                <div class="arrow-icon">&rarr;</div>
+                            </div>
+                            <div class="action-card">
+                                <div class="stat-icon" style="margin:0; width:36px; height:36px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></div>
+                                <div class="action-text">
+                                    <h4>Settings</h4>
+                                    <p>API keys &amp; portal security</p>
+                                </div>
+                                <div class="arrow-icon">&rarr;</div>
+                            </div>
+                            <div class="action-card">
+                                <div class="stat-icon" style="margin:0; width:36px; height:36px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg></div>
+                                <div class="action-text">
+                                    <h4>Documentation</h4>
+                                    <p>Guides &amp; API reference</p>
+                                </div>
+                                <div class="arrow-icon">&rarr;</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function goToScreen(num) {
+            const current = document.querySelector('.screen.active');
+            if (current) {
+                current.classList.add('fade-out');
+                setTimeout(() => {
+                    current.classList.remove('active', 'fade-out');
+                    showScreen(num);
+                }, 400);
+            } else {
+                showScreen(num);
+            }
+        }
+
+        function showScreen(num) {
+            const next = document.getElementById('screen' + num);
+            next.classList.add('active');
+            
+            if (num === 2) {
+                document.getElementById('main-nav').style.opacity = '0';
+                setTimeout(() => { document.getElementById('main-nav').style.display = 'none'; }, 400);
+                startScreen2Sequence();
+            } else if (num === 3) {
+                document.getElementById('main-nav').style.display = 'none';
+                startScreen3Sequence();
+            } else if (num === 4) {
+                document.getElementById('main-nav').style.display = 'none';
+                startScreen4Sequence();
+            }
+        }
+
+        function startSequence() {
+            goToScreen(2);
+        }
+
+        function startScreen2Sequence() {
+            const phone = document.getElementById('phone-container');
+            const qrPanel = document.getElementById('qr-panel');
+            const scanBtn = document.getElementById('scan-btn');
+            
+            // Slide phone in slowly
+            setTimeout(() => {
+                phone.style.transition = 'transform 1200ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 1000ms ease';
+                phone.classList.add('slide-in');
+            }, 200);
+
+            // Wait for slide-in to complete, then click scan button
+            setTimeout(() => {
+                scanBtn.classList.add('active');
+                
+                // Wait to show user the active clicked state
+                setTimeout(() => {
+                    // Open camera overlay
+                    document.getElementById('camera-overlay').style.display = 'flex';
+                    
+                    // Now smoothly move the phone over the QR
+                    phone.style.transition = 'transform 1500ms ease-in-out, opacity 1000ms ease';
+                    phone.style.transform = 'translateX(-410px) scale(1.05)';
+                    
+                    // Once phone is over the QR, show the static QR
+                    setTimeout(() => {
+                        document.getElementById('static-qr').style.opacity = '1';
+                        
+                        // Wait for scan animation simulation
+                        setTimeout(() => {
+                            // Scan success flash
+                            document.getElementById('flash-overlay').style.opacity = '0.85';
+                            
+                            setTimeout(() => {
+                                document.getElementById('flash-overlay').style.opacity = '0';
+                                
+                                // Disappear QR slowly
+                                qrPanel.style.transition = 'all 800ms ease';
+                                qrPanel.style.opacity = '0';
+                                qrPanel.style.transform = 'scale(0.8)';
+                                
+                                // Disappear Phone slowly
+                                phone.style.transition = 'transform 1000ms ease-in-out, opacity 1000ms ease';
+                                phone.style.opacity = '0';
+                                phone.style.transform = 'translateX(-450px) scale(0.8)';
+                                
+                                // Go to screen 3
+                                setTimeout(() => {
+                                    goToScreen(3);
+                                }, 800);
+                            }, 200);
+                        }, 1500);
+                    }, 1500);
+                }, 800);
+            }, 1800);
+        }
+
+        function startScreen3Sequence() {
+            const bar = document.getElementById('progress-fill');
+            const text = document.getElementById('loading-text');
+            
+            // Trigger reflow to restart animation
+            bar.style.animation = 'none';
+            bar.offsetHeight;
+            bar.style.animation = 'progress 1.5s linear forwards';
+            
+            const texts = ["Authenticating via QR scan...", "Verifying identity...", "Loading your workspace..."];
+            let idx = 0;
+            const textInterval = setInterval(() => {
+                idx++;
+                if(idx < texts.length) {
+                    text.innerText = texts[idx];
+                }
+            }, 500);
+
+            setTimeout(() => {
+                clearInterval(textInterval);
+                goToScreen(4);
+            }, 1600);
+        }
+
+        function startScreen4Sequence() {
+            const cards = document.querySelectorAll('.stat-anim');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('animate-up');
+                }, (index + 1) * 100);
+            });
+        }
+    </script>
+</body>
+</html>
